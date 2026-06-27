@@ -1,0 +1,9 @@
+- use react + CSS
+- Use motion for animation
+- Use component library (Shadcn)
+- Lucide for icons
+- Tailwind CSS
+- CSS
+Host with Vercel
+
+https://github.com/emmabostian/developer-portfolios
