@@ -45,7 +45,7 @@ export default function PixelGlobe({
   detail = 54,            // sphere resolution (higher = finer pixels)
   glow = true,            // soft atmospheric halo
   className = "",
-  style,
+  style = {},
 }) {
   const ref = useRef(null);
 
