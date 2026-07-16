@@ -6,6 +6,20 @@ atlas links your real bank, credit card, and investment accounts into one dashbo
 
 **Scope note:** this is the September-target MVP, built on _real_ data. Features are split into MVP (ships), Stretch (feasible, added if time allows), and Future (out of scope for now). The Stretch/Future items are all possible — they're cut to protect frontend time, since the dashboard is UI-heavy and React is being learned alongside it.
 
+## Current state (as of 2026-07-15)
+
+The project is **frontend-first**: the dashboard UI and its design system are being built ahead of the backend, rather than in strict vertical slices. Concretely:
+
+**Built:**
+
+- Vite + **React 19** + **Tailwind v4** (CSS-first, no `tailwind.config.js`) + **shadcn (radix-nova)** scaffold, running **dark-only**.
+- A dark design system with tokens in `src/index.css` — brand roles (`brand` blue, `positive` teal), a `chart-1..6` spending ramp, radius/font scales.
+- UI primitives: `card`, `avatar`, `button`, `toggle`, `toggle-group` (the canonical pattern feature components mirror).
+- Dashboard cards: `NetWorthCard` done; `AccountsCard` / `AccountsCardItem` / `DashboardSpendingCard` in progress.
+- An agentic Claude Code workflow (see **Development workflow** below) with the `ui-consistency-checker` subagent live.
+
+**Not started — the entire backend:** Bun + TypeScript API, Postgres, Plaid integration, the daily snapshot job, and the AI NL-query layer. The frontend currently runs against no live data. Everything from **Foundation** onward in this spec is the plan, not yet the reality.
+
 ## Foundation: data sourcing
 
 Use **Plaid via the Trial plan** — free, real production data, auto-approved for personal use, up to 10 linked institutions. Sign up at the Plaid dashboard and select "Personal use." No full Production approval needed, and most OAuth institutions (including Vanguard) are available on the Trial plan.
@@ -95,28 +109,67 @@ Implemented as NL → structured query (tool/function calling against the DB), s
 - Scheduled daily job to record balance/net-worth snapshots — powers every time-series chart
 - **Demo mode:** a `DEMO_MODE` config flag that points the app at Plaid **Sandbox** with synthetic accounts. Same codebase as the real personal instance — only the config differs (sandbox keys + seeded demo data). Powers the public demo deploy.
 
+## Development workflow
+
+atlas is built with an agentic Claude Code workflow using **task-scoped subagents** (scoped to a job, not a persona). Config lives in the repo (`.claude/`, `CLAUDE.md`) so it's version-controlled.
+
+**The loop — Build → Audit → Verify → Gate → Ship:**
+
+| Stage | Job | Owner |
+| ----- | --- | ----- |
+| Build | consult the `ui-ux-pro-max` skill for design direction, then write the component/feature within our tokens + primitives | primary session |
+| Audit | design-system drift (Card primitive, tokens, shadcn conventions) | `ui-consistency-checker` |
+| Verify | renders correctly dark-only | claude-in-chrome screenshot / `/run` |
+| Gate | typecheck + lint + correctness review of the diff | `code-checker` |
+| Ship | branch, commit, open PR | `github-handler` |
+
+**Subagents:**
+
+- **Active now:** `ui-consistency-checker` (UI/design-system audit), `code-checker` (correctness gate), `github-handler` (git/PR). Slash commands `/audit-ui`, `/check`, `/ship` invoke them.
+- **Planned (build when the backend lands)** — one task-scoped agent per backend domain:
+  - **`plaid-integrator`** — owns the Plaid Link/token-exchange flow and the Transactions/Balance/Investments products, honoring the Trial-plan constraints (≤10 institutions; current balances only — no backfill; inconsistent cost basis).
+  - **`db-steward`** — owns the Postgres schema, migrations, and the daily net-worth snapshot job (forward-only migrations; idempotent daily snapshots; money as integer minor units).
+  - **`ai-query-builder`** — owns the NL→structured-query layer: LLM tool/function-calling over the DB (never open-ended text-to-SQL), enforcing the privacy guardrail that the model sees only aggregates/results.
+  - As each backend area gets real code, add a matching **read-only checker** (mirroring `ui-consistency-checker`) so review stays advisory and separate from building.
+
+**Supporting foundations:** root `CLAUDE.md` (grounds every session in stack + design-system rules + this workflow); npm `typecheck`/`lint`/`format` scripts; a `PostToolUse` hook that runs ESLint on edited `src` files for immediate feedback (fills the no-CI gap).
+
 ## Timeline & feasibility
 
-**Verdict:** achievable by end of September, but at the upper edge of a part-time scope while learning React. Assumes ~10–12 hrs/week over ~14 weeks. Two front-loaded risks: the React ramp (weeks 1–3) and Plaid OAuth/Vanguard quirks (week 4). Keep the buffer week sacred.
+**Verdict:** paced for a **safe, stable result over speed**. Two milestones: a **resume-ready, deployed frontend demo on mock data by ~mid-August** (Phase 1), then the **real full-stack app — live Plaid data, all screens, real net-worth snapshots — through September**, with the **AI layer, hardening, and deploy landing early-to-mid October** (Phase 2). Sustainable ~10–12 hrs/week, no crunch weeks, re-based from mid-July 2026. The dominant risk is **Plaid Trial/OAuth (esp. Vanguard)** — it gets its own week, with the sandbox path de-risking everything built before it; a slip there costs the "real accounts" milestone, not the rest. Because the mock-data frontend is already deployed and on the resume by mid-August, the backend timeline can breathe.
 
-**Principle:** build **vertically** — thin end-to-end slices, not the whole backend then the whole frontend. Aim to be demo-able from week 3 onward, so a slipped schedule still leaves something to show.
+**Principle: frontend-first.** Build the **complete UI against a typed mock-data layer**, then build the backend and swap the mocks for real endpoints — screen by screen. This suits a UI-heavy dashboard being built while learning React: the app is visually demo-able early, the design system stabilizes before backend complexity arrives, and — critically — it puts a **presentable, deployable product on the resume weeks before the data layer exists**.
 
-| Week | Dates        | Focus                                                                                             | Milestone                     |
-| ---- | ------------ | ------------------------------------------------------------------------------------------------- | ----------------------------- |
-| 1    | Jun 23–29    | React fundamentals (throwaway practice) + scaffold: Bun API, Postgres, one data endpoint in React | React ↔ Bun ↔ Postgres talk   |
-| 2    | Jun 30–Jul 6 | Plaid **sandbox** Link flow; pull transactions + balances into Postgres                           | Real-shaped data in DB        |
-| 3    | Jul 7–13     | Transaction feed + balances UI (first full vertical slice)                                        | First demo-able screen        |
-| 4    | Jul 14–20    | Swap to Plaid **Trial** (real data); connect bank + Vanguard; handle OAuth quirks                 | Your real accounts showing    |
-| 5    | Jul 21–27    | Net worth headline, net-this-month, ranges; daily snapshot job + synthetic seed                   | Net worth + snapshot pipeline |
-| 6    | Jul 28–Aug 3 | Net worth graph (Recharts) from snapshots; dashboard shell tying screens together                 | SoFi-style graph              |
-| 7    | Aug 4–10     | Manual assets/liabilities CRUD, folded into net worth + snapshots                                 | Complete net worth            |
-| 8    | Aug 11–17    | Investments tab — holdings table                                                                  | Holdings view                 |
-| 9    | Aug 18–24    | Spending — category donut + cash flow                                                             | Spending insights             |
-| 10   | Aug 25–31    | AI NL queries: define ~5 typed tool functions, wire LLM tool-calling, search bar UI               | Ask-a-question works          |
-| 11   | Sep 1–7      | AI hardening (robust on ~10 common questions) + CSV export                                        | AI reliable + export          |
-| 12   | Sep 8–14     | Polish: styling, empty/loading/error states                                                       | Looks intentional             |
-| 13   | Sep 15–21    | Record demo, README, clean repo, deploy or local-demo                                             | Shippable                     |
-| 14   | Sep 22–28    | Buffer / stretch (subscriptions or buy/sell if ahead)                                             | Done                          |
+**The one rule that makes this work:** the mock-data layer must be **shaped to the eventual API** (Plaid-shaped `Account`, transactions, holdings, daily snapshots). If the mock types match the real response types, Phase 2 is a data-source swap, not a UI rewrite. Keep data access behind a thin module so there's a single seam to move from mock → fetch.
+
+Legend: ✅ done · 🔄 in progress · ⬜ not started.
+
+### Phase 1 — Frontend on mock data → 🎯 **resume-ready demo by mid-August**
+
+The goal of this phase is a **polished, clickable, deployed dashboard** running on API-shaped mock data — the version that goes on the resume. It looks and behaves like the finished product; only the data is synthetic. Manual assets/liabilities CRUD is deferred to Phase 2 (it needs real persistence) and is the first cut if a week runs tight.
+
+| Week | Dates        | Focus                                                                                              | Milestone                         | Status |
+| ---- | ------------ | -------------------------------------------------------------------------------------------------- | --------------------------------- | ------ |
+| 1    | Jul 13–19    | Finish in-progress dashboard cards (`AccountsCard`, `DashboardSpendingCard`); stand up the typed **mock-data layer** (API-shaped) behind a thin access module | Dashboard cards complete on mocks | 🔄 |
+| 2    | Jul 20–26    | Transactions feed + filter/search UI (account, category, amount, date)                             | Transactions screen               | ⬜ |
+| 3    | Jul 27–Aug 2 | Net worth: headline, net-this-month, ranges + SoFi-style Recharts graph (mock snapshots)           | Net worth screen                  | ⬜ |
+| 4    | Aug 3–9      | Investments holdings table UI; spending category donut + cash flow UI                              | Investments + spending screens    | ⬜ |
+| 5    | Aug 10–16    | AI search-bar UI shell (mock responses); loading/empty/error states; dark-only + responsive polish; **deploy the demo** | 🎯 **Resume-ready frontend demo** | ⬜ |
+
+### Phase 2 — Backend & integration (replace mocks with real data)
+
+One focus per week, sustainable pace. The real full-stack substance — Bun/Postgres API, live Plaid data across every screen, real net-worth snapshots — lands **through September**; the AI query layer, hardening, and deploy follow in **early-to-mid October**. Plaid OAuth gets its own dedicated week so it can't derail the rest. The "if behind, cut" order below protects the core.
+
+| Week | Dates          | Focus                                                                                            | Milestone                        | Status |
+| ---- | -------------- | ------------------------------------------------------------------------------------------------ | -------------------------------- | ------ |
+| 6    | Aug 17–23      | Scaffold Bun + TypeScript API + Postgres; wire one real endpoint end-to-end, replacing one mock  | React ↔ Bun ↔ Postgres           | ⬜ |
+| 7    | Aug 24–30      | Plaid **sandbox** Link flow; ingest transactions + balances → Postgres                           | Real-shaped data in DB           | ⬜ |
+| 8    | Aug 31–Sep 6   | Swap accounts/transactions/balances screens mock → real endpoints                                | Dashboard on live sandbox data   | ⬜ |
+| 9    | Sep 7–13       | Investments ingestion (holdings + txns); swap investments + spending screens to real             | Investments + spending live      | ⬜ |
+| 10   | Sep 14–20      | Daily **snapshot job** + synthetic seed; net worth graph on real snapshots; manual assets/liabilities CRUD + persistence | Complete net worth on real data  | ⬜ |
+| 11   | Sep 21–27      | Swap to Plaid **Trial** (real accounts); connect bank + Vanguard; handle OAuth quirks            | 🎯 **Real accounts — full-stack on real data** | ⬜ |
+| 12   | Sep 28–Oct 4   | AI NL layer: typed tool functions + LLM tool-calling wired to DB (replaces mock AI); CSV export  | Ask-a-question works + export    | ⬜ |
+| 13   | Oct 5–11       | AI hardening (~10 questions); demo video, README, deploy (`DEMO_MODE` sandbox); buffer           | Shippable                        | ⬜ |
 
 **AI scope note:** keep the NL feature bounded — define a small set of typed tool functions (e.g. `query_transactions(filters)`, `spending_by_category(period)`, `get_holdings()`, `net_worth(range)`), let the model pick and fill arguments, execute against the DB, and have it narrate the result. This is ~a week of work once the data layer exists. Avoid open-ended text-to-SQL — that's where this feature balloons.
 

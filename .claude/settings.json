@@ -1,9 +1,42 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx shadcn@latest add toggle-group -y)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(npm i *)",
       "Bash(npm view *)",
-      "Bash(npm install *)"
+      "Bash(npx eslint *)",
+      "Bash(npx prettier *)",
+      "Bash(npx tsc *)",
+      "Bash(npx shadcn@latest *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git branch *)",
+      "Bash(git checkout *)",
+      "Bash(git restore *)",
+      "Bash(git fetch *)",
+      "Bash(git push *)",
+      "Bash(git remote *)",
+      "Bash(git init *)",
+      "Bash(git config *)",
+      "Bash(git ls-remote *)",
+      "Bash(git check-ignore *)",
+      "Bash(gh *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/lint-on-edit.mjs"
+          }
+        ]
+      }
     ]
   }
 }
