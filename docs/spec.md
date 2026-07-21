@@ -6,17 +6,21 @@ atlas links your real bank, credit card, and investment accounts into one dashbo
 
 **Scope note:** this is the September-target MVP, built on _real_ data. Features are split into MVP (ships), Stretch (feasible, added if time allows), and Future (out of scope for now). The Stretch/Future items are all possible — they're cut to protect frontend time, since the dashboard is UI-heavy and React is being learned alongside it.
 
-## Current state (as of 2026-07-15)
+## Current state (as of 2026-07-20)
 
-The project is **frontend-first**: the dashboard UI and its design system are being built ahead of the backend, rather than in strict vertical slices. Concretely:
+The project is **frontend-first**: the dashboard UI and its design system are being built ahead of the backend, rather than in strict vertical slices. **Week 1 is complete**; Week 2 (transactions) is in progress.
 
 **Built:**
 
 - Vite + **React 19** + **Tailwind v4** (CSS-first, no `tailwind.config.js`) + **shadcn (radix-nova)** scaffold, running **dark-only**.
 - A dark design system with tokens in `src/index.css` — brand roles (`brand` blue, `positive` teal), a `chart-1..6` spending ramp, radius/font scales.
 - UI primitives: `card`, `avatar`, `button`, `toggle`, `toggle-group` (the canonical pattern feature components mirror).
-- Dashboard cards: `NetWorthCard` done; `AccountsCard` / `AccountsCardItem` / `DashboardSpendingCard` in progress.
-- An agentic Claude Code workflow (see **Development workflow** below) with the `ui-consistency-checker` subagent live.
+- Dashboard cards complete on mock data: `NetWorthCard` (with a working W/M/6M/Y range toggle), `AccountsCard` + `AccountsCardItem`, `DashboardSpendingCard`.
+- The typed **mock-data layer** — `src/data/{types,accounts,netWorth,spending}.ts` behind the `@/data` barrel. Types are API-shaped (Plaid-mirroring), so Phase 2 is a data-source swap rather than a UI rewrite.
+- A **Vitest** unit suite in `src/tests/` covering the data layer's pure logic.
+- The agentic Claude Code workflow described under **Development workflow** below, with four subagents live.
+
+**Not yet built on the frontend:** routing and a shared app shell — the app still renders a single dashboard page. The nav rail shown in every `docs/design/` reference arrives with Week 2.
 
 **Not started — the entire backend:** Node.js + TypeScript API, Postgres, Plaid integration, the daily snapshot job, and the AI NL-query layer. The frontend currently runs against no live data. Everything from **Foundation** onward in this spec is the plan, not yet the reality.
 
@@ -157,8 +161,8 @@ The goal of this phase is a **polished, clickable, deployed dashboard** running 
 
 | Week | Dates        | Focus                                                                                              | Milestone                         | Status |
 | ---- | ------------ | -------------------------------------------------------------------------------------------------- | --------------------------------- | ------ |
-| 1    | Jul 13–19    | Finish in-progress dashboard cards (`AccountsCard`, `DashboardSpendingCard`); stand up the typed **mock-data layer** (API-shaped) behind a thin access module | Dashboard cards complete on mocks | 🔄 |
-| 2    | Jul 20–26    | Transactions feed + filter/search UI (account, category, amount, date)                             | Transactions screen               | ⬜ |
+| 1    | Jul 13–19    | Finish in-progress dashboard cards (`AccountsCard`, `DashboardSpendingCard`); stand up the typed **mock-data layer** (API-shaped) behind a thin access module | Dashboard cards complete on mocks | ✅ |
+| 2    | Jul 20–26    | **App shell + router** (persistent nav rail, shared page header); transactions feed + filter/search UI (account, category, amount, date) | Navigable app + transactions screen | 🔄 |
 | 3    | Jul 27–Aug 2 | Net worth: headline, net-this-month, ranges + SoFi-style Recharts graph (mock snapshots)           | Net worth screen                  | ⬜ |
 | 4    | Aug 3–9      | Investments holdings table UI; spending category donut + cash flow UI                              | Investments + spending screens    | ⬜ |
 | 5    | Aug 10–16    | AI search-bar UI shell (mock responses); loading/empty/error states; dark-only + responsive polish; **PWA (installable home-screen app)**; **deploy to Vercel (`atlaswealth.xyz`)** | 🎯 **Resume-ready frontend demo — installable on iPhone** | ⬜ |
