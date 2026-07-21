@@ -18,7 +18,7 @@ The project is **frontend-first**: the dashboard UI and its design system are be
 - Dashboard cards: `NetWorthCard` done; `AccountsCard` / `AccountsCardItem` / `DashboardSpendingCard` in progress.
 - An agentic Claude Code workflow (see **Development workflow** below) with the `ui-consistency-checker` subagent live.
 
-**Not started — the entire backend:** Bun + TypeScript API, Postgres, Plaid integration, the daily snapshot job, and the AI NL-query layer. The frontend currently runs against no live data. Everything from **Foundation** onward in this spec is the plan, not yet the reality.
+**Not started — the entire backend:** Node.js + TypeScript API, Postgres, Plaid integration, the daily snapshot job, and the AI NL-query layer. The frontend currently runs against no live data. Everything from **Foundation** onward in this spec is the plan, not yet the reality.
 
 ## Foundation: data sourcing
 
@@ -97,12 +97,15 @@ Implemented as NL → structured query (tool/function calling against the DB), s
 
 **Framing (for the README):** single-tenant is a deliberate architecture choice given the Trial-plan limit — not a dead end. The codebase is structured so going multi-user later is a clean addition, not a rewrite.
 
-**Deploy target:** decide early (Fly.io, Railway, or Render — all handle Bun + managed Postgres well) so the week-13 task is "deploy," not "learn how to deploy."
+**Installable app (iOS PWA).** atlas ships as a **Progressive Web App** so it installs to the iPhone home screen — same web app plus a manifest, icons, and a service worker (via `vite-plugin-pwa`). Install is Safari → Share → **Add to Home Screen**; it then runs full-screen with its own icon, indistinguishable from a native app for daily use. This needs **no Mac and no App Store** — it rides entirely on the responsive UI (Week 5), so the packaging is a thin layer, not a second codebase. Honest iOS caveats: install is manual/undiscoverable (fine for a personal app), cached storage can be evicted under pressure, web-push is limited (iOS 16.4+), and OS-level FaceID isn't available to a PWA. Those limits — plus a true `.ipa` / native feel — are what the **Capacitor** stretch (below) buys later. A React Native rewrite is deliberately *not* the path: it would discard the responsive web UI.
+
+**Deploy target: Vercel**, production at **`atlaswealth.xyz`** (the real personal instance, real Plaid data). The public sandbox demo sits on a `demo.atlaswealth.xyz` subdomain or the same deployment in `DEMO_MODE`. Vercel is an ideal fit for the React frontend + PWA; the Phase-2 backend maps onto Vercel's serverless model — API routes as serverless functions, the **daily snapshot job as a Vercel Cron**, and managed **Vercel/Neon Postgres** — rather than an always-on Express server. Wiring this early keeps the week-13 task "deploy," not "learn how to deploy."
 
 ## Stack
 
-- Runtime/API: Bun + TypeScript
-- Frontend: React + Recharts
+- Runtime/API: Node.js + TypeScript (Express, deployed as Vercel serverless functions)
+- Frontend: React + Recharts, shipped as an installable **PWA** (`vite-plugin-pwa` — manifest + service worker)
+- Host: **Vercel** (production `atlaswealth.xyz`); daily snapshot job via Vercel Cron
 - DB: Postgres — transactions, balances, holdings, manual entries, snapshots
 - Aggregation: Plaid (Trial plan, real data)
 - AI: an LLM API with tool/function calling for NL queries
@@ -119,13 +122,17 @@ atlas is built with an agentic Claude Code workflow using **task-scoped subagent
 | ----- | --- | ----- |
 | Build | consult the `ui-ux-pro-max` skill for design direction, then write the component/feature within our tokens + primitives | primary session |
 | Audit | design-system drift (Card primitive, tokens, shadcn conventions) | `ui-consistency-checker` |
-| Verify | renders correctly dark-only | claude-in-chrome screenshot / `/run` |
+| Verify | renders correctly dark-only + responsive across viewports | claude-in-chrome screenshot / `/run` now; `e2e-tester` (Playwright) once UI grows |
 | Gate | typecheck + lint + correctness review of the diff | `code-checker` |
 | Ship | branch, commit, open PR | `github-handler` |
 
+A **testing sector** runs alongside the loop on a per-session / per-milestone cadence (not a per-change gate): `unit-tester` (pure-logic Vitest) now, `e2e-tester` (browser flows + responsive rendering) later.
+
 **Subagents:**
 
-- **Active now:** `ui-consistency-checker` (UI/design-system audit), `code-checker` (correctness gate), `github-handler` (git/PR). Slash commands `/audit-ui`, `/check`, `/ship` invoke them.
+- **Active now:** `ui-consistency-checker` (UI/design-system audit), `code-checker` (correctness gate), `github-handler` (git/PR); slash commands `/audit-ui`, `/check`, `/ship` invoke them. Plus `unit-tester` — writes/runs/reviews **Vitest unit tests** for pure logic (starts with the `src/data/*` mock/access layer; tests live in `src/tests/`). Invoked by name as a checkpoint, deliberately **no `/test` command**.
+- **Planned:**
+  - **`e2e-tester`** — one task-scoped Playwright agent owning the **Verify** stage as a *repeatable committed suite*: key user flows plus responsive rendering across a viewport set (mobile 375 / tablet 768 / desktop 1440) and a dark-only render sanity pass. Build it alongside the Week-2 router / Week-5 responsive-polish work — there's nothing to E2E while the app is a single non-responsive page; until then Verify stays the interactive claude-in-chrome / `/run` check. Combines E2E and responsiveness in one agent (same tool, same skill) rather than splitting them.
 - **Planned (build when the backend lands)** — one task-scoped agent per backend domain:
   - **`plaid-integrator`** — owns the Plaid Link/token-exchange flow and the Transactions/Balance/Investments products, honoring the Trial-plan constraints (≤10 institutions; current balances only — no backfill; inconsistent cost basis).
   - **`db-steward`** — owns the Postgres schema, migrations, and the daily net-worth snapshot job (forward-only migrations; idempotent daily snapshots; money as integer minor units).
@@ -154,15 +161,15 @@ The goal of this phase is a **polished, clickable, deployed dashboard** running 
 | 2    | Jul 20–26    | Transactions feed + filter/search UI (account, category, amount, date)                             | Transactions screen               | ⬜ |
 | 3    | Jul 27–Aug 2 | Net worth: headline, net-this-month, ranges + SoFi-style Recharts graph (mock snapshots)           | Net worth screen                  | ⬜ |
 | 4    | Aug 3–9      | Investments holdings table UI; spending category donut + cash flow UI                              | Investments + spending screens    | ⬜ |
-| 5    | Aug 10–16    | AI search-bar UI shell (mock responses); loading/empty/error states; dark-only + responsive polish; **deploy the demo** | 🎯 **Resume-ready frontend demo** | ⬜ |
+| 5    | Aug 10–16    | AI search-bar UI shell (mock responses); loading/empty/error states; dark-only + responsive polish; **PWA (installable home-screen app)**; **deploy to Vercel (`atlaswealth.xyz`)** | 🎯 **Resume-ready frontend demo — installable on iPhone** | ⬜ |
 
 ### Phase 2 — Backend & integration (replace mocks with real data)
 
-One focus per week, sustainable pace. The real full-stack substance — Bun/Postgres API, live Plaid data across every screen, real net-worth snapshots — lands **through September**; the AI query layer, hardening, and deploy follow in **early-to-mid October**. Plaid OAuth gets its own dedicated week so it can't derail the rest. The "if behind, cut" order below protects the core.
+One focus per week, sustainable pace. The real full-stack substance — Node.js/Postgres API, live Plaid data across every screen, real net-worth snapshots — lands **through September**; the AI query layer, hardening, and deploy follow in **early-to-mid October**. Plaid OAuth gets its own dedicated week so it can't derail the rest. The "if behind, cut" order below protects the core.
 
 | Week | Dates          | Focus                                                                                            | Milestone                        | Status |
 | ---- | -------------- | ------------------------------------------------------------------------------------------------ | -------------------------------- | ------ |
-| 6    | Aug 17–23      | Scaffold Bun + TypeScript API + Postgres; wire one real endpoint end-to-end, replacing one mock  | React ↔ Bun ↔ Postgres           | ⬜ |
+| 6    | Aug 17–23      | Scaffold Node.js + Express + TypeScript API + Postgres; wire one real endpoint end-to-end, replacing one mock  | React ↔ Express ↔ Postgres       | ⬜ |
 | 7    | Aug 24–30      | Plaid **sandbox** Link flow; ingest transactions + balances → Postgres                           | Real-shaped data in DB           | ⬜ |
 | 8    | Aug 31–Sep 6   | Swap accounts/transactions/balances screens mock → real endpoints                                | Dashboard on live sandbox data   | ⬜ |
 | 9    | Sep 7–13       | Investments ingestion (holdings + txns); swap investments + spending screens to real             | Investments + spending live      | ⬜ |
@@ -190,6 +197,7 @@ All of these work with the Trial plan and products above. Cut from MVP for time,
 - **Subscriptions** — auto-detected recurring charges via Plaid's Recurring Transactions (part of the Transactions product): merchant, amount, frequency, next expected date
 - **Debt / liabilities breakdown** — credit card APRs, student loans, mortgages via the Liabilities product (also in the Trial bundle)
 - **Budgeting** — per-category spending caps with progress and alerts
+- **Capacitor native iOS shell** — wrap the same React build in a native WebView to produce a real installable `.ipa`, unlocking OS-level FaceID, secure storage, and native push beyond what the PWA offers. Needs an Apple Developer account and a cloud-Mac build (dev is on Windows). This is the *upgrade path* from the Week-5 PWA, not a rewrite — a React Native rebuild is explicitly out (it would discard the responsive web UI).
 
 ## Future (out of scope for now)
 

@@ -4,7 +4,7 @@ Atlas is an **AI personal-finance dashboard**. Full product spec + roadmap: **`d
 
 ## Current state
 
-Frontend-only at present: a **React 19 + Vite + Tailwind v4 (CSS-first) + shadcn (radix-nova)** dashboard, running **dark-only**. The backend described in the spec (Bun API, Postgres, Plaid, daily snapshots, AI query layer) is **not built yet**. Don't assume live data or server code exists.
+Frontend-only at present: a **React 19 + Vite + Tailwind v4 (CSS-first) + shadcn (radix-nova)** dashboard, running **dark-only**. The backend described in the spec (Node.js API, Postgres, Plaid, daily snapshots, AI query layer) is **not built yet**. Don't assume live data or server code exists.
 
 ## Design system (enforced by the `ui-consistency-checker` agent)
 
@@ -35,6 +35,7 @@ Rules: new **primitives** go in `ui/`; new **feature UI** goes in `components/<f
 npm run dev         # Vite dev server
 npm run typecheck   # tsc -b
 npm run lint        # eslint .   (lint:fix to autofix)
+npm run test        # vitest run   (unit tests in src/tests/)
 npm run format      # prettier --write .   (format:check to verify)
 npm run build       # tsc -b && vite build
 ```
@@ -45,11 +46,13 @@ npm run build       # tsc -b && vite build
 |---|---|
 | **Build** | Consult the **`ui-ux-pro-max`** skill for design direction, then write the component — mirroring the primitives and staying within our tokens/styling. |
 | **Audit** | `/audit-ui` → `ui-consistency-checker` for design-system drift. |
-| **Verify** | Screenshot via claude-in-chrome / `/run` — confirm it renders correctly dark-only. |
+| **Verify** | Screenshot via claude-in-chrome / `/run` — confirm it renders correctly dark-only (and responsive, once the UI grows). The `e2e-tester` (Playwright) will own this as a committed suite later. |
 | **Gate** | `/check` → `code-checker` runs typecheck + lint and reviews the diff for correctness. |
 | **Ship** | `/ship` → `github-handler` branches, commits, and opens the PR. |
 
-Subagents are **task-scoped** (jobs, not personas) and live in `.claude/agents/`. Planned backend agents (`plaid-integrator`, `db-steward`, `ai-query-builder`) are described in `docs/spec.md` and will be built when the backend lands.
+Alongside the loop, a **testing checkpoint** runs per-session / per-milestone (not per-change): the **`unit-tester`** agent writes/runs/reviews **Vitest unit tests** for pure logic (starts with `src/data/*`; tests live in **`src/tests/`**). Invoke it by name — there is deliberately **no `/test` command**. Bug-hunting the diff stays with `code-checker`; deep multi-file review stays with `/code-review`.
+
+Subagents are **task-scoped** (jobs, not personas) and live in `.claude/agents/`. Planned agents live in `docs/spec.md`: **`e2e-tester`** (Playwright — browser flows + responsive viewports; built with the Week-2 router / Week-5 responsive work) and the backend trio (`plaid-integrator`, `db-steward`, `ai-query-builder`, when the backend lands).
 
 ## Key constraint to remember
 

@@ -1,6 +1,6 @@
 // Domain types for Atlas, shaped to the eventual API responses so a real
 // endpoint maps in with no transformation. This is the contract that both the
-// mock-data layer (now) and the Bun/Plaid backend (Phase 2) satisfy — see
+// mock-data layer (now) and the Node.js/Plaid backend (Phase 2) satisfy — see
 // docs/spec.md, "Principle: frontend-first."
 
 /**
@@ -32,6 +32,29 @@ export interface Account {
   spent?: number
 }
 
-// Future domain types (transactions, holdings, net-worth snapshots, manual
-// assets/liabilities) land here as their screens get built — same API-shaped
-// contract, so the Phase 2 backend swap stays a data-source change, not a rewrite.
+/**
+ * One day's net-worth snapshot. Plaid only returns *current* balances, so
+ * this is the row shape Atlas's own daily snapshot job will write going
+ * forward (see docs/spec.md, "Key constraint to design around") — the net
+ * worth graph is built entirely from a series of these, never backfilled.
+ */
+export interface NetWorthSnapshot {
+  /** ISO date (YYYY-MM-DD), one row per day. */
+  date: string
+  netWorth: number
+}
+
+/**
+ * A category's aggregated spend for a period. Mirrors what a `/transactions/get`
+ * aggregation by category would produce. No color here — color is a
+ * presentation concern assigned by the consuming component, same as how
+ * `AccountsCardItem` derives its avatar color rather than storing it on `Account`.
+ */
+export interface SpendingCategory {
+  category: string
+  amount: number
+}
+
+// Future domain types (transactions, holdings, manual assets/liabilities)
+// land here as their screens get built — same API-shaped contract, so the
+// Phase 2 backend swap stays a data-source change, not a rewrite.
