@@ -138,7 +138,7 @@ function AppShell() {
           `min-w-0` because a flex item defaults to min-width:auto and so won't
           shrink below its content — a wide child (the transactions table) would
           push the layout out rather than scroll inside it. */}
-      <main className="mx-auto w-full min-w-0 max-w-5xl flex-1 px-8 py-10">
+      <main className="mx-auto w-full min-w-0 max-w-7xl flex-1 px-8 py-10">
         <Outlet />
       </main>
     </div>
