@@ -55,6 +55,35 @@ export interface SpendingCategory {
   amount: number
 }
 
-// Future domain types (transactions, holdings, manual assets/liabilities)
-// land here as their screens get built — same API-shaped contract, so the
-// Phase 2 backend swap stays a data-source change, not a rewrite.
+/**
+ * One transaction, shaped like a row from Plaid's `/transactions/get` (see
+ * docs/spec.md — transactions arrive *with* history, unlike balances). A real
+ * API response maps in with no transformation, plus one joined/derived field.
+ */
+export interface Transaction {
+  transaction_id: string
+  /** FK to `Account.account_id` — which linked account it belongs to. */
+  account_id: string
+  /** ISO date (YYYY-MM-DD) the transaction posted. */
+  date: string
+  /** Merchant/description as Plaid returns it (Plaid `name`). */
+  name: string
+  merchant_name?: string | null
+  /**
+   * Plaid's sign convention: a POSITIVE amount is money *leaving* the account
+   * (an expense); a NEGATIVE amount is money *coming in* (income/refund). The
+   * UI flips this for display — see TransactionRow — so income reads as +$ and
+   * spending as −$, which is how people expect to see it.
+   */
+  amount: number
+  iso_currency_code?: string | null
+  /** Simplified single label (Plaid `personal_finance_category.primary`). */
+  category: string
+  /** Joined from `Account.name` for display (e.g. "Chase Total Checking").
+   *  Derived, not a raw Plaid transaction field — the backend joins it in Phase 2. */
+  accountName?: string
+}
+
+// Future domain types (holdings, manual assets/liabilities) land here as their
+// screens get built — same API-shaped contract, so the Phase 2 backend swap
+// stays a data-source change, not a rewrite.

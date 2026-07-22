@@ -21,7 +21,8 @@ src/
   components/
     ui/          shadcn primitives ONLY (avatar, button, card, toggle, toggle-group) — canonical
     dashboard/   dashboard feature components (NetWorthCard, AccountsCard, AccountsCardItem, DashboardSpendingCard)
-    visuals/     decorative/visual components (Globe, PixelGlobe)
+    visuals/     decorative/visual components (Globe — the pixel globe brand mark)
+    layout/      app chrome (AppShell + nav rail, PageHeader)
   data/          the mock→real data seam: types.ts (API-shaped domain types), accounts.ts (mock + getAccounts()), index.ts (barrel)
   pages/         Dashboard.tsx
   lib/           utils.ts (cn)
