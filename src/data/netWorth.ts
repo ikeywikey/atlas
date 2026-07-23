@@ -1,4 +1,86 @@
-import type { NetWorthSnapshot } from "./types"
+import type {
+  Account,
+  ManualItem,
+  NetWorthBucket,
+  NetWorthComposition,
+  NetWorthSnapshot,
+} from "./types"
+import { getAccounts } from "./accounts"
+import { getManualItems } from "./manualItems"
+
+// ── Composition: what net worth is made of ───────────────────────────────────
+
+/**
+ * Rolls linked accounts + manual items into the assets/liabilities breakdown
+ * the net-worth screen renders.
+ *
+ * Pure (takes its inputs, reads no module state) so it's trivially testable and
+ * so a caller can run it over a subset — same split as `summarizeTransactions`
+ * in transactions.ts, where `getTransactions()` is the seam and the summarizer
+ * is pure.
+ *
+ * Sign handling: Plaid signs a credit-card balance NEGATIVE (money owed), while
+ * `ManualItem.value` is always a positive magnitude with `kind` carrying the
+ * direction. Both are normalised here to positive amounts — the group a bucket
+ * sits in is what says whether it counts for or against you.
+ *
+ * Empty buckets are dropped rather than rendered as a $0 row.
+ */
+export function summarizeNetWorthComposition(
+  accounts: Account[],
+  manualItems: ManualItem[]
+): NetWorthComposition {
+  // Sum the accounts of one Plaid `type`, as a positive magnitude.
+  const sumAccounts = (type: string) =>
+    accounts
+      .filter((a) => a.type === type)
+      .reduce((total, a) => total + Math.abs(a.balances?.current ?? 0), 0)
+
+  const sumManual = (kind: ManualItem["kind"]) =>
+    manualItems
+      .filter((i) => i.kind === kind)
+      .reduce((total, i) => total + i.value, 0)
+
+  // Drop $0 buckets so a user with no investments doesn't see an empty row.
+  const nonEmpty = (buckets: NetWorthBucket[]) =>
+    buckets.filter((b) => b.amount > 0)
+
+  const assetBuckets = nonEmpty([
+    { label: "Cash & deposits", amount: sumAccounts("depository") },
+    { label: "Investments", amount: sumAccounts("investment") },
+    { label: "Manual assets", amount: sumManual("asset") },
+  ])
+
+  const liabilityBuckets = nonEmpty([
+    { label: "Credit cards", amount: sumAccounts("credit") },
+    { label: "Loans", amount: sumManual("liability") },
+  ])
+
+  const total = (buckets: NetWorthBucket[]) =>
+    buckets.reduce((sum, b) => sum + b.amount, 0)
+
+  const assetsTotal = total(assetBuckets)
+  const liabilitiesTotal = total(liabilityBuckets)
+
+  return {
+    assets: { total: assetsTotal, buckets: assetBuckets },
+    liabilities: { total: liabilitiesTotal, buckets: liabilityBuckets },
+    netWorth: assetsTotal - liabilitiesTotal,
+    // Guard the divide: a brand-new user with no linked accounts has no assets.
+    debtToAssetRatio:
+      assetsTotal === 0 ? 0 : (liabilitiesTotal / assetsTotal) * 100,
+  }
+}
+
+/**
+ * Data-access seam for the breakdown — components call this, never the
+ * summarizer directly. Phase 2 swaps the two `get*` calls for real queries.
+ */
+export function getNetWorthComposition(): NetWorthComposition {
+  return summarizeNetWorthComposition(getAccounts(), getManualItems())
+}
+
+// ── History: the snapshot series behind the graph ────────────────────────────
 
 // Mock daily net-worth snapshots, shaped like the row Atlas's own snapshot
 // job will write in Phase 2 (Plaid has no balance history — see the "Key
@@ -8,7 +90,11 @@ import type { NetWorthSnapshot } from "./types"
 const DAY_MS = 24 * 60 * 60 * 1000
 const HISTORY_DAYS = 400
 
-const CURRENT = 171334
+// Today's value is *derived* from the breakdown above rather than hardcoded, so
+// the headline on the graph can never drift from the assets/liabilities cards
+// sitting underneath it. (It lands on the design's $171,334 because the mock
+// balances were tuned to — see the comment in accounts.ts.)
+const CURRENT = getNetWorthComposition().netWorth
 const MONTH_AGO = CURRENT - 1820
 const SIX_MONTHS_AGO = 156972
 const YEAR_AGO = 138000

@@ -33,7 +33,7 @@ const NAV_ITEMS: {
 }[] = [
   { label: "Dashboard", icon: LayoutGrid, to: "/" },
   { label: "Transactions", icon: ListOrdered, to: "/transactions" },
-  { label: "Net worth", icon: TrendingUp, to: null },
+  { label: "Net worth", icon: TrendingUp, to: "/net-worth" },
   { label: "Investments", icon: Layers, to: null },
   { label: "Spending", icon: Activity, to: null },
   { label: "Accounts", icon: CreditCard, to: null },

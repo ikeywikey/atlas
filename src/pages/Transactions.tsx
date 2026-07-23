@@ -8,13 +8,6 @@ import TransactionsSummary from "@/components/transactions/TransactionsSummary.t
 import TransactionsFeed from "@/components/transactions/TransactionsFeed.tsx"
 import { getTransactions } from "@/data"
 
-// Today, formatted like "Jul 21" for the header's sync status. Computed once at
-// module load — it's just chrome, not reactive state.
-const today = new Date().toLocaleDateString("en-US", {
-  month: "short",
-  day: "numeric",
-})
-
 function Transactions() {
   // --- Filter state -------------------------------------------------------
   // Each control's value lives here in the page, not inside the control. This
@@ -67,13 +60,8 @@ function Transactions() {
 
   return (
     <div>
-      <PageHeader title="Transactions">
-        {/* Right-hand slot: a quiet "synced" status, matching the reference. */}
-        <span className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
-          <span className="size-1.5 rounded-full bg-positive" />
-          synced · {today}
-        </span>
-      </PageHeader>
+      {/* The sync status now lives in PageHeader itself — it's on every screen. */}
+      <PageHeader title="Transactions" />
 
       <div className="flex flex-col gap-4">
         <TransactionsFilterBar

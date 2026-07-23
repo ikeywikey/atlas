@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from "react-router"
 import AppShell from "@/components/layout/AppShell.tsx"
 import Dashboard from "@/pages/Dashboard.tsx"
 import Transactions from "@/pages/Transactions.tsx"
+import NetWorth from "@/pages/NetWorth.tsx"
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           {/* Child paths are relative to the parent, so this resolves to
               "/transactions". No leading slash needed. */}
           <Route path="transactions" element={<Transactions />} />
+          <Route path="net-worth" element={<NetWorth />} />
           {/* "*" is the catch-all, matched only when nothing else does. Ranked
               last by the router regardless of where it sits in this list. */}
           <Route path="*" element={<Dashboard />} />

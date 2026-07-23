@@ -19,12 +19,15 @@ Frontend-only at present: a **React 19 + Vite + Tailwind v4 (CSS-first) + shadcn
 ```
 src/
   components/
-    ui/          shadcn primitives ONLY (avatar, button, card, toggle, toggle-group) — canonical
+    ui/          shadcn primitives ONLY (avatar, button, card, progress, select, toggle, toggle-group) — canonical
     dashboard/   dashboard feature components (NetWorthCard, AccountsCard, AccountsCardItem, DashboardSpendingCard)
+    transactions/ transactions feature components (FilterBar, Summary, Feed, Row)
+    netWorth/    net-worth feature components (NetWorthChart, CompositionCard, CompositionRow)
     visuals/     decorative/visual components (Globe — the pixel globe brand mark)
-    layout/      app chrome (AppShell + nav rail, PageHeader)
-  data/          the mock→real data seam: types.ts (API-shaped domain types), accounts.ts (mock + getAccounts()), index.ts (barrel)
-  pages/         Dashboard.tsx
+    layout/      app chrome (AppShell + nav rail, PageHeader, SyncStatus)
+  data/          the mock→real data seam: types.ts (API-shaped domain types), accounts.ts, netWorth.ts,
+                 spending.ts, transactions.ts, manualItems.ts, index.ts (barrel)
+  pages/         Dashboard.tsx, Transactions.tsx, NetWorth.tsx
   lib/           utils.ts (cn)
 ```
 
@@ -55,6 +58,8 @@ Alongside the loop, a **testing checkpoint** runs per-session / per-milestone (n
 
 Subagents are **task-scoped** (jobs, not personas) and live in `.claude/agents/`. Planned agents live in `docs/spec.md`: **`e2e-tester`** (Playwright — browser flows + responsive viewports; built with the Week-2 router / Week-5 responsive work) and the backend trio (`plaid-integrator`, `db-steward`, `ai-query-builder`, when the backend lands).
 
-## Key constraint to remember
+## Key constraints to remember
 
 Plaid returns **current balances only — no history**. The net-worth graph is built from **daily snapshots recorded going forward**; you cannot backfill. (See `docs/spec.md`.)
+
+**The mock numbers reconcile, and must stay that way.** `getNetWorthComposition()` derives the assets/liabilities breakdown from `getAccounts()` + `getManualItems()`, and `netWorth.ts` derives its `CURRENT` snapshot value from that total — so the graph headline and the breakdown cards can't drift. Editing a mock balance moves the whole net-worth screen; `src/tests/netWorth.test.ts` pins the total at **$171,334** as the guard.
