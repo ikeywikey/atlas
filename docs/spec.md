@@ -19,11 +19,12 @@ The project is **frontend-first**: the dashboard UI and its design system are be
 - Dashboard cards complete on mock data: `NetWorthCard` (with a working W/M/6M/Y range toggle), `AccountsCard` + `AccountsCardItem`, `DashboardSpendingCard`.
 - **Transactions screen** — filterable/searchable feed with a summary row.
 - **Net worth screen** — the `NetWorthCard` at hero scale plus `Assets`/`Liabilities` composition cards, derived from the account list rather than hardcoded, so the breakdown always reconciles to the headline.
-- The typed **mock-data layer** — `src/data/{types,accounts,netWorth,spending,transactions,manualItems}.ts` behind the `@/data` barrel. Types are API-shaped (Plaid-mirroring), so Phase 2 is a data-source swap rather than a UI rewrite.
+- **Investments screen** — market value / total gain / cost basis tiles, a per-security holdings table, and an allocation donut. Holdings aggregate across accounts by `security_id`, and each account's holdings sum to that account's balance, so this screen reconciles to net worth too.
+- The typed **mock-data layer** — `src/data/{types,accounts,netWorth,spending,transactions,manualItems,investments}.ts` behind the `@/data` barrel. Types are API-shaped (Plaid-mirroring), so Phase 2 is a data-source swap rather than a UI rewrite.
 - A **Vitest** unit suite in `src/tests/` covering the data layer's pure logic.
 - The agentic Claude Code workflow described under **Development workflow** below, with four subagents live.
 
-**Not yet built on the frontend:** the investments and spending screens (Week 4), the AI search-bar shell, and the responsive/PWA pass (Week 5). The app is deliberately **desktop-first** until Week 5. Manual assets/liabilities are currently read-only — CRUD needs real persistence and lands in Phase 2.
+**Not yet built on the frontend:** the spending screen and the dashboard's investments card (Week 4), the AI search-bar shell, and the responsive/PWA pass (Week 5). The app is deliberately **desktop-first** until Week 5. Manual assets/liabilities are currently read-only — CRUD needs real persistence and lands in Phase 2.
 
 **Not started — the entire backend:** Node.js + TypeScript API, Postgres, Plaid integration, the daily snapshot job, and the AI NL-query layer. The frontend currently runs against no live data. Everything from **Foundation** onward in this spec is the plan, not yet the reality.
 
@@ -167,7 +168,7 @@ The goal of this phase is a **polished, clickable, deployed dashboard** running 
 | 1    | Jul 13–19    | Finish in-progress dashboard cards (`AccountsCard`, `DashboardSpendingCard`); stand up the typed **mock-data layer** (API-shaped) behind a thin access module | Dashboard cards complete on mocks | ✅ |
 | 2    | Jul 20–26    | **App shell + router** (persistent nav rail, shared page header); transactions feed + filter/search UI (account, category, amount, date) | Navigable app + transactions screen | ✅ |
 | 3    | Jul 27–Aug 2 | Net worth: headline, net-this-month, ranges + SoFi-style Recharts graph (mock snapshots); assets/liabilities composition breakdown | Net worth screen                  | 🔄 |
-| 4    | Aug 3–9      | Investments holdings table UI; spending category donut + cash flow UI                              | Investments + spending screens    | ⬜ |
+| 4    | Aug 3–9      | Investments holdings table UI; spending category donut + cash flow UI                              | Investments + spending screens    | 🔄 |
 | 5    | Aug 10–16    | AI search-bar UI shell (mock responses); loading/empty/error states; dark-only + responsive polish; **PWA (installable home-screen app)**; **deploy to Vercel (`atlaswealth.xyz`)** | 🎯 **Resume-ready frontend demo — installable on iPhone** | ⬜ |
 
 ### Phase 2 — Backend & integration (replace mocks with real data)

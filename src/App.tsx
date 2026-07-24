@@ -7,6 +7,7 @@ import AppShell from "@/components/layout/AppShell.tsx"
 import Dashboard from "@/pages/Dashboard.tsx"
 import Transactions from "@/pages/Transactions.tsx"
 import NetWorth from "@/pages/NetWorth.tsx"
+import Investments from "@/pages/Investments.tsx"
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
               "/transactions". No leading slash needed. */}
           <Route path="transactions" element={<Transactions />} />
           <Route path="net-worth" element={<NetWorth />} />
+          <Route path="investments" element={<Investments />} />
           {/* "*" is the catch-all, matched only when nothing else does. Ranked
               last by the router regardless of where it sits in this list. */}
           <Route path="*" element={<Dashboard />} />
