@@ -3,6 +3,7 @@
 // Phase 2 has a single seam.
 export * from "./types"
 export * from "./accounts"
+export * from "./manualItems"
 export * from "./netWorth"
 export * from "./spending"
 export * from "./transactions"

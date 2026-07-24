@@ -84,6 +84,54 @@ export interface Transaction {
   accountName?: string
 }
 
-// Future domain types (holdings, manual assets/liabilities) land here as their
-// screens get built — same API-shaped contract, so the Phase 2 backend swap
-// stays a data-source change, not a rewrite.
+/**
+ * A manually-entered asset or liability — the things Plaid can't see (a car,
+ * cash under the mattress, a private loan). Deliberately NOT Plaid-shaped:
+ * unlike every other type in this file, this one has no upstream API to mirror.
+ * It's Atlas's own table, so this shape *is* the contract the Phase 2 backend
+ * will be written to (see docs/spec.md — manual CRUD lands in Week 10).
+ *
+ * Manual items fold straight into net worth alongside linked accounts; see
+ * `summarizeNetWorthComposition` in netWorth.ts.
+ */
+export interface ManualItem {
+  id: string
+  name: string
+  /** Which side of the balance sheet it sits on. */
+  kind: "asset" | "liability"
+  /** Display subtype: vehicle | cash | loan | property | ... */
+  category: string
+  /** Always a POSITIVE magnitude — `kind` carries the direction, not the sign.
+   *  (Contrast `Account.balances.current`, where Plaid signs credit balances
+   *  negative, and `Transaction.amount`, where positive means money out.) */
+  value: number
+  /** Free-text detail shown under the name ("KBB private-party value"). */
+  note?: string
+}
+
+/**
+ * One bucket of the net-worth breakdown — "Cash & deposits", "Loans", etc.
+ * Purely derived (aggregated from accounts + manual items), never fetched.
+ */
+export interface NetWorthBucket {
+  label: string
+  /** Positive magnitude; which side it's on is implied by the group it's in. */
+  amount: number
+}
+
+/**
+ * The full assets-vs-liabilities breakdown behind the net-worth headline.
+ * Produced by `summarizeNetWorthComposition` — see netWorth.ts.
+ */
+export interface NetWorthComposition {
+  assets: { total: number; buckets: NetWorthBucket[] }
+  liabilities: { total: number; buckets: NetWorthBucket[] }
+  /** assets.total − liabilities.total. */
+  netWorth: number
+  /** liabilities ÷ assets, as a percentage. 0 when there are no assets. */
+  debtToAssetRatio: number
+}
+
+// Future domain types (investment holdings) land here as their screens get
+// built — same API-shaped contract, so the Phase 2 backend swap stays a
+// data-source change, not a rewrite.

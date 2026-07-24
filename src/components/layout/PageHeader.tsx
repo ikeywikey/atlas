@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import SyncStatus from "./SyncStatus.tsx"
 
 /**
  * The eyebrow + title block at the top of every screen in docs/design/*.png.
@@ -7,6 +8,10 @@ import { cn } from "@/lib/utils"
  * rather than the header deriving it from the URL. Titles are copy, not routing
  * data, and pages will eventually want dynamic ones ("Chase Checking") that no
  * path-to-label map could produce.
+ *
+ * The sync status is rendered here rather than passed in by each page: it
+ * appears on *every* screen in the design references, and it reports app-wide
+ * state, so no page should have to remember to include it.
  */
 function PageHeader({
   title,
@@ -30,9 +35,13 @@ function PageHeader({
           {title}
         </h1>
       </div>
-      {/* Optional right-hand slot for per-page controls (filters, sync status,
-          actions). Renders nothing when a page passes no children. */}
-      {children}
+      {/* Right-hand stack: any per-page controls a page passes as children sit
+          above the shared sync status, matching the references where the
+          control strip stacks over "● synced · Jun 26". */}
+      <div className="flex flex-col items-end gap-2">
+        {children}
+        <SyncStatus />
+      </div>
     </header>
   )
 }
