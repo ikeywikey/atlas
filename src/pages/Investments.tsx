@@ -4,9 +4,10 @@ import HoldingsTable from "@/components/investments/HoldingsTable.tsx"
 import AllocationCard from "@/components/investments/AllocationCard.tsx"
 import {
   changeTone,
+  currency,
   signedCurrency,
   signedPercent,
-} from "@/components/investments/palette"
+} from "@/lib/palette"
 import { getInvestmentsSummary } from "@/data"
 
 function Investments() {
@@ -24,9 +25,6 @@ function Investments() {
     positions,
   } = getInvestmentsSummary()
 
-  const money = (value: number) =>
-    `$${value.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
-
   return (
     <div>
       <PageHeader title="Investments" />
@@ -37,7 +35,7 @@ function Investments() {
         <div className="grid gap-5 sm:grid-cols-3">
           <SummaryTile
             label="MARKET VALUE"
-            value={money(marketValue)}
+            value={currency(marketValue)}
             // Only the percentage is coloured, not the dollar amount — the
             // same split the table rows and the TOTAL GAIN tile use.
             sub={
@@ -64,7 +62,7 @@ function Investments() {
           />
           <SummaryTile
             label="COST BASIS"
-            value={money(costBasis)}
+            value={currency(costBasis)}
             sub={`${positionCount} ${positionCount === 1 ? "position" : "positions"}`}
           />
         </div>

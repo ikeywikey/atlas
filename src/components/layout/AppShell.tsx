@@ -36,7 +36,7 @@ const NAV_ITEMS: {
   { label: "Dashboard", icon: LayoutGrid, to: "/" },
   { label: "Transactions", icon: AlignLeft, to: "/transactions" },
   { label: "Investments", icon: TrendingUp, to: "/investments" },
-  { label: "Spending", icon: CreditCard, to: null },
+  { label: "Spending", icon: CreditCard, to: "/spending" },
   { label: "Net worth", icon: Scale, to: "/net-worth" },
   { label: "Accounts", icon: Layers, to: null },
 ]

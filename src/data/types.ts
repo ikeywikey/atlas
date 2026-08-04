@@ -56,6 +56,40 @@ export interface SpendingCategory {
 }
 
 /**
+ * Income vs spending for a period, and what was left over.
+ *
+ * Purely derived (see `getCashFlow` in spending.ts), never fetched — there's no
+ * Plaid "cash flow" endpoint, the same way there's none for `NetWorthBucket`.
+ * `spending` is summed from the same categories the donut renders, so the two
+ * cards on the spending screen cannot disagree.
+ */
+export interface CashFlow {
+  /** Calendar month the figures cover, e.g. "August". */
+  period: string
+  /** Money in — the only mock *input* here; everything else is computed. */
+  income: number
+  /** Money out: the sum of every spending category for the period. */
+  spending: number
+  /** income − spending. Negative when the period overspent. */
+  netSaved: number
+  /** netSaved ÷ income, as a percentage. 0 when there was no income. */
+  savingsRate: number
+}
+
+/**
+ * One month's total spend — a point in the "last 6 months" bar chart.
+ *
+ * Derived, like `CashFlow`: a real implementation aggregates
+ * `/transactions/get` per month rather than reading a stored row.
+ */
+export interface MonthlySpending {
+  /** Abbreviated month label, e.g. "Aug". Display-only — the series is ordered
+   *  oldest-first, so position carries the chronology, not this string. */
+  month: string
+  amount: number
+}
+
+/**
  * One transaction, shaped like a row from Plaid's `/transactions/get` (see
  * docs/spec.md — transactions arrive *with* history, unlike balances). A real
  * API response maps in with no transformation, plus one joined/derived field.

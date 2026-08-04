@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card"
 import HoldingRow from "./HoldingRow"
-import { positionColor } from "./palette"
+import { rampColor } from "@/lib/palette"
 import type { Position } from "@/data"
 
 // Tracked-out mono column labels, using the SAME horizontal padding as the body
@@ -50,7 +50,7 @@ function HoldingsTable({ positions }: { positions: Position[] }) {
                   position={position}
                   // Index-matched to the donut: positions arrive largest-first
                   // from summarizeHoldings, and the donut walks the same array.
-                  color={positionColor(i)}
+                  color={rampColor(i)}
                 />
               ))}
             </tbody>

@@ -1,20 +1,33 @@
 import NetWorthCard from "@/components/dashboard/NetWorthCard.tsx"
 import DashboardSpendingCard from "@/components/dashboard/DashboardSpendingCard.tsx"
+import DashboardInvestmentsCard from "@/components/dashboard/DashboardInvestmentsCard.tsx"
 import AccountsCard from "@/components/dashboard/AccountsCard.tsx"
 import PageHeader from "@/components/layout/PageHeader.tsx"
 
 function Dashboard() {
   return (
-    // AppShell's <main> now allows a wide ceiling (for the transactions table),
-    // so the dashboard keeps its own narrower, centered column here rather than
-    // stretching. (The two-column card grid in docs/design/dashboard.png is
-    // Week 3+.)
-    <div className="mx-auto w-full max-w-5xl">
+    <div>
       <PageHeader title="Dashboard" />
-      <div className="flex flex-col items-center gap-5">
-        <NetWorthCard />
-        <DashboardSpendingCard />
-        <AccountsCard />
+
+      {/* The two-column grid from docs/design/dashboard.png. The left column
+          is wider because it carries the net-worth chart, which needs the
+          horizontal room to read as a trend; the right column stacks the two
+          summary cards. Below lg it collapses to a single column and the four
+          cards fall into source order.
+
+          `items-start` stops the grid's default stretch: without it the
+          shorter column's last card would be inflated to match the taller one
+          rather than keeping its own height. */}
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[1.4fr_1fr]">
+        <div className="flex flex-col gap-5">
+          <NetWorthCard />
+          <AccountsCard />
+        </div>
+
+        <div className="flex flex-col gap-5">
+          <DashboardSpendingCard />
+          <DashboardInvestmentsCard />
+        </div>
       </div>
     </div>
   )
