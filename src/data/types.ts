@@ -132,6 +132,121 @@ export interface NetWorthComposition {
   debtToAssetRatio: number
 }
 
-// Future domain types (investment holdings) land here as their screens get
-// built — same API-shaped contract, so the Phase 2 backend swap stays a
-// data-source change, not a rewrite.
+/**
+ * One security held in one account, shaped like a row from Plaid's
+ * `/investments/holdings/get`. That endpoint returns two parallel arrays —
+ * `holdings[]` (the position) and `securities[]` (the ticker/name behind it) —
+ * joined on `security_id`. This type is the *joined* row, the same way
+ * `Transaction.accountName` is joined from `Account.name`; the Phase 2 backend
+ * does the join so the UI never has to.
+ *
+ * Note the grain: it's one row per (account, security) pair, NOT per security.
+ * The same ETF held in a brokerage account and a 401(k) is two rows. The
+ * investments screen aggregates them — see `summarizeHoldings` in
+ * investments.ts, which produces `Position`.
+ */
+export interface Holding {
+  /** FK to `Account.account_id` — which investment account holds it. */
+  account_id: string
+  /**
+   * Plaid's own ID for the *security* — the tradeable thing itself (a specific
+   * ETF, stock, or fund), as opposed to your holding of it.
+   *
+   * Why this exists instead of just using the ticker: a ticker is a display
+   * label, not a stable identifier. Tickers get reused after a company delists,
+   * change on rebrands (FB → META), differ between exchanges for the same fund,
+   * and are simply absent for a lot of institution-specific and money-market
+   * funds. `security_id` is stable across all of that, and identical across
+   * every account and every user holding that security.
+   *
+   * That stability is exactly why it's the grouping key in
+   * `summarizeHoldings` — VTI held in a brokerage account and VTI held in a
+   * 401(k) arrive as two rows carrying the same `security_id`, which is how we
+   * know to roll them into one `Position` rather than showing VTI twice.
+   *
+   * Format is an opaque Plaid string; never parse it, only compare it.
+   */
+  security_id: string
+  /** Ticker symbol (`Security.ticker_symbol`). Null for things that don't have
+   *  one — some money-market and institution-specific funds. */
+  ticker?: string | null
+  /** Human name (`Security.name`), e.g. "Vanguard Total Stock Market ETF". */
+  name: string
+  /** Shares held. Fractional is normal, especially in retirement accounts. */
+  quantity: number
+  /** Current price per share, as the institution reports it. */
+  institution_price: number
+  /** Current market value of this row. Plaid returns this explicitly rather
+   *  than making you multiply — and it can differ from `quantity ×
+   *  institution_price` by a cent of rounding, so prefer this field. */
+  institution_value: number
+  /**
+   * What was paid for the position — **a total, not a per-share figure**. Easy
+   * to misread, and the difference is a factor of `quantity`.
+   *
+   * Optional because Plaid genuinely can't always supply it: on the Trial plan
+   * cost basis is inconsistent across institutions (see docs/spec.md). Callers
+   * must treat a missing value as "unknown gain", not as a $0 basis — a $0
+   * basis would report the entire position as profit.
+   */
+  cost_basis?: number | null
+  /** Price at the close of the *previous* trading day (Plaid `Security.close_price`).
+   *  This is what makes the "today" change derivable from real data rather
+   *  than invented: day change = (institution_price − close_price) × quantity. */
+  close_price?: number | null
+  iso_currency_code?: string | null
+}
+
+/**
+ * One security aggregated across every account that holds it — what the
+ * investments table and allocation donut render, one row per ticker.
+ *
+ * Purely derived (see `summarizeHoldings`), never fetched: there's no Plaid
+ * endpoint for this shape, the same way `NetWorthBucket` has none.
+ */
+export interface Position {
+  security_id: string
+  ticker?: string | null
+  name: string
+  /** Total shares across all accounts. */
+  quantity: number
+  /** Current price per share (identical across the rolled-up rows). */
+  price: number
+  /** Total market value across all accounts. */
+  value: number
+  /** Total paid. `null` when any contributing row is missing cost basis —
+   *  unknown, which is different from zero. */
+  costBasis: number | null
+  /** value − costBasis. `null` when cost basis is unknown. */
+  gain: number | null
+  /** gain ÷ costBasis, as a percentage. `null` when unknown or basis is 0. */
+  gainPct: number | null
+  /** Change since the previous close, in dollars and percent. */
+  dayChange: number
+  dayChangePct: number
+  /** This position's share of the whole portfolio, as a percentage. */
+  allocationPct: number
+}
+
+/**
+ * The whole portfolio: headline stats plus the positions behind them.
+ * Produced by `summarizeHoldings` — see investments.ts.
+ */
+export interface InvestmentsSummary {
+  /** Total current market value. */
+  marketValue: number
+  /** Total paid, across positions where it's known. */
+  costBasis: number
+  /** marketValue − costBasis, and the same as a percentage of cost basis. */
+  totalGain: number
+  totalGainPct: number
+  /** Change since the previous close. */
+  dayChange: number
+  dayChangePct: number
+  /** Distinct securities held — the "N positions" figure. Note this counts
+   *  positions, not holding rows, so one ETF in three accounts counts once. */
+  positionCount: number
+  /** Largest value first, so a caller can colour by array index without
+   *  re-deriving the order (same contract `getSpending()` sets). */
+  positions: Position[]
+}

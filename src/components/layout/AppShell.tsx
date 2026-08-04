@@ -5,11 +5,11 @@
 // separate `react-router-dom` package.
 import { NavLink, Outlet } from "react-router"
 import {
-  Activity,
+  AlignLeft,
   CreditCard,
   Layers,
   LayoutGrid,
-  ListOrdered,
+  Scale,
   TrendingUp,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -18,9 +18,11 @@ import { cn } from "@/lib/utils"
 import Globe from "@/components/visuals/Globe.tsx"
 
 // ── Nav model ────────────────────────────────────────────────────────────────
-// The rail's destinations, in the order they appear in docs/design/*.png.
-// Data-driven rather than six hand-written blocks, so adding a screen in
-// Week 3–4 is a one-line change.
+// The rail's destinations, in the order and with the glyphs shown in
+// docs/design/*.png — the order is read straight off which icon is active on
+// each design screenshot (trending-up lights on Investments, the pulse line on
+// Net worth, etc.), not invented here. Data-driven rather than six hand-written
+// blocks, so adding a screen is a one-line change.
 //
 // `to` is null for screens that don't exist yet. Those render as dimmed,
 // non-interactive icons instead of disappearing — the app's full shape stays
@@ -32,11 +34,11 @@ const NAV_ITEMS: {
   to: string | null
 }[] = [
   { label: "Dashboard", icon: LayoutGrid, to: "/" },
-  { label: "Transactions", icon: ListOrdered, to: "/transactions" },
-  { label: "Net worth", icon: TrendingUp, to: "/net-worth" },
-  { label: "Investments", icon: Layers, to: null },
-  { label: "Spending", icon: Activity, to: null },
-  { label: "Accounts", icon: CreditCard, to: null },
+  { label: "Transactions", icon: AlignLeft, to: "/transactions" },
+  { label: "Investments", icon: TrendingUp, to: "/investments" },
+  { label: "Spending", icon: CreditCard, to: null },
+  { label: "Net worth", icon: Scale, to: "/net-worth" },
+  { label: "Accounts", icon: Layers, to: null },
 ]
 
 // Shared sizing for every rail item, live or disabled, so the column stays on

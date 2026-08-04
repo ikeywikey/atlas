@@ -23,11 +23,13 @@ src/
     dashboard/   dashboard feature components (NetWorthCard, AccountsCard, AccountsCardItem, DashboardSpendingCard)
     transactions/ transactions feature components (FilterBar, Summary, Feed, Row)
     netWorth/    net-worth feature components (NetWorthChart, CompositionCard, CompositionRow)
+    investments/ investments feature components (SummaryTile, HoldingsTable, HoldingRow,
+                 AllocationCard, AllocationRow, AllocationBar, palette.ts = shared colour/format helpers)
     visuals/     decorative/visual components (Globe — the pixel globe brand mark)
     layout/      app chrome (AppShell + nav rail, PageHeader, SyncStatus)
   data/          the mock→real data seam: types.ts (API-shaped domain types), accounts.ts, netWorth.ts,
-                 spending.ts, transactions.ts, manualItems.ts, index.ts (barrel)
-  pages/         Dashboard.tsx, Transactions.tsx, NetWorth.tsx
+                 spending.ts, transactions.ts, manualItems.ts, investments.ts, index.ts (barrel)
+  pages/         Dashboard.tsx, Transactions.tsx, NetWorth.tsx, Investments.tsx
   lib/           utils.ts (cn)
 ```
 
@@ -63,3 +65,5 @@ Subagents are **task-scoped** (jobs, not personas) and live in `.claude/agents/`
 Plaid returns **current balances only — no history**. The net-worth graph is built from **daily snapshots recorded going forward**; you cannot backfill. (See `docs/spec.md`.)
 
 **The mock numbers reconcile, and must stay that way.** `getNetWorthComposition()` derives the assets/liabilities breakdown from `getAccounts()` + `getManualItems()`, and `netWorth.ts` derives its `CURRENT` snapshot value from that total — so the graph headline and the breakdown cards can't drift. Editing a mock balance moves the whole net-worth screen; `src/tests/netWorth.test.ts` pins the total at **$171,334** as the guard.
+
+The chain extends one level deeper: **each investment account's holdings in `investments.ts` sum to that account's `balances.current`**, and those three accounts are the "Investments" bucket feeding the net-worth total ($119,354 of it). `src/tests/investments.test.ts` asserts the per-account sums against `getAccounts()`, so a holding edited in isolation fails loudly instead of quietly desyncing the two screens.
