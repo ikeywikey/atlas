@@ -1,26 +1,23 @@
 import { Card } from "@/components/ui/card"
 import { PieChart, Pie, Sector, ResponsiveContainer } from "recharts"
 import type { PieSectorShapeProps } from "recharts"
-import { getSpending } from "@/data"
+import { currency, rampColor } from "@/lib/palette"
+import { getSpending, rollUpCategories } from "@/data"
 
-// Same order as the chart-1..6 ramp in index.css. getSpending() guarantees
-// categories arrive largest-first (Other pinned last), so indexing into this
-// array reads as a natural gradient.
-const CHART_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-  "var(--chart-6)",
-]
+// The dashboard shows six rows; the spending screen shows all eight. Rather
+// than a second hardcoded list, the tail is folded into a derived "Other" —
+// see rollUpCategories in data/spending.ts. That's what keeps this card's
+// total identical to the spending screen's while showing fewer rows.
+const DASHBOARD_ROWS = 6
 
 function DashboardSpendingCard() {
   const { period, categories } = getSpending()
-  const spending = categories.map((item, i) => ({
-    ...item,
-    color: CHART_COLORS[i % CHART_COLORS.length],
-  }))
+  const spending = rollUpCategories(categories, DASHBOARD_ROWS).map(
+    (item, i) => ({
+      ...item,
+      color: rampColor(i),
+    })
+  )
   const total = spending.reduce((sum, item) => sum + item.amount, 0)
 
   return (
@@ -55,8 +52,8 @@ function DashboardSpendingCard() {
           </ResponsiveContainer>
 
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-foreground text-xl font-mono tracking-wide">
-              ${total.toLocaleString("en-US")}
+            <p className="text-xl tracking-wide text-foreground">
+              {currency(total)}
             </p>
             <p className="text-muted-foreground text-xs font-sans">SPENT</p>
           </div>
@@ -75,8 +72,8 @@ function DashboardSpendingCard() {
                 />
                 {item.category}
               </span>
-              <span className="text-xs font-mono text-foreground">
-                ${item.amount.toLocaleString("en-US")}
+              <span className="text-xs tabular-nums text-foreground">
+                {currency(item.amount)}
               </span>
             </li>
           ))}

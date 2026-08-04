@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils"
 import type { Position } from "@/data"
-import { changeTone, signedCurrency, signedPercent } from "./palette"
+import { changeTone, signedCurrency, signedPercent } from "@/lib/palette"
 
 interface HoldingRowProps {
   position: Position

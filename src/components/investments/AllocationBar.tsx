@@ -1,4 +1,4 @@
-import { positionColor } from "./palette"
+import { rampColor } from "@/lib/palette"
 import type { Position } from "@/data"
 
 /**
@@ -29,7 +29,7 @@ function AllocationBar({ positions }: { positions: Position[] }) {
             // rather than overflowing the container.
             width: `${position.allocationPct}%`,
             minWidth: 0,
-            backgroundColor: positionColor(i),
+            backgroundColor: rampColor(i),
           }}
         />
       ))}

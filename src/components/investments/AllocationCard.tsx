@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card"
 import { PieChart, Pie, Sector, ResponsiveContainer } from "recharts"
 import type { PieSectorShapeProps } from "recharts"
 import AllocationRow from "./AllocationRow"
-import { positionColor } from "./palette"
+import { rampColor } from "@/lib/palette"
 import type { Position } from "@/data"
 
 /**
@@ -25,7 +25,7 @@ function AllocationCard({ positions }: { positions: Position[] }) {
   // only receives the payload — it can't see the array index.
   const data = positions.map((position, i) => ({
     ...position,
-    color: positionColor(i),
+    color: rampColor(i),
   }))
 
   return (
@@ -94,7 +94,7 @@ function AllocationCard({ positions }: { positions: Position[] }) {
               <AllocationRow
                 key={position.security_id}
                 position={position}
-                color={positionColor(i)}
+                color={rampColor(i)}
               />
             ))}
           </ul>

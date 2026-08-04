@@ -1,14 +1,18 @@
-// Shared presentation helpers for the investments screen.
+// Shared presentation helpers for charts and money figures.
 //
-// These live in one module because four separate places render the same
-// position — the donut segment, the table's ticker dot, the legend swatch, and
-// the dashboard allocation bar. If each derived its own colour they'd drift the
-// moment the ramp changed, and a legend that disagrees with its chart is worse
-// than no legend.
+// These live in one module because several unrelated screens render the same
+// two things: a ranked list coloured off the chart ramp (the investments donut,
+// its table, the dashboard allocation bar, the spending donut and its category
+// rows) and a signed gain/loss figure. If each derived its own colour they'd
+// drift the moment the ramp changed, and a legend that disagrees with its chart
+// is worse than no legend.
+//
+// It sits in `lib/` rather than under a feature folder precisely because it's
+// cross-feature — `components/<feature>/` is for UI that belongs to one screen.
 
-// The chart ramp from index.css, walked largest-position-first. `chart-1..5`
-// step down the brand blue; `chart-6` is the neutral "everything else" token.
-const POSITION_COLORS = [
+// The chart ramp from index.css, walked largest-item-first. `chart-1..5` step
+// down the brand blue; `chart-6` is the neutral "everything else" token.
+const RAMP_COLORS = [
   "var(--chart-1)",
   "var(--chart-2)",
   "var(--chart-3)",
@@ -18,18 +22,18 @@ const POSITION_COLORS = [
 ]
 
 /**
- * Colour for the position at `index`, assuming positions arrive largest-first
- * (which `summarizeHoldings` guarantees).
+ * Colour for the item at `index`, assuming items arrive largest-first (which
+ * `summarizeHoldings` and `getSpending` both guarantee).
  *
  * Past the end of the ramp it repeats the last entry rather than cycling back
  * to `chart-1` — the same `Math.min(i, length - 1)` convention CompositionCard
- * uses. Cycling would put a bright blue slice next to the largest holding's
- * bright blue slice and read as a second big position; repeating the neutral
- * token instead makes the long tail look like a tail. This is what lets the
- * screen handle 3 positions or 30 without the palette being edited.
+ * uses. Cycling would put a bright blue slice next to the largest item's bright
+ * blue slice and read as a second big value; repeating the neutral token
+ * instead makes the long tail look like a tail. This is what lets a screen
+ * handle 3 items or 30 without the palette being edited.
  */
-export function positionColor(index: number): string {
-  return POSITION_COLORS[Math.min(index, POSITION_COLORS.length - 1)]
+export function rampColor(index: number): string {
+  return RAMP_COLORS[Math.min(index, RAMP_COLORS.length - 1)]
 }
 
 /**
@@ -66,4 +70,9 @@ export function signedCurrency(value: number, fractionDigits = 0): string {
 export function signedPercent(value: number, fractionDigits = 1): string {
   const sign = value > 0 ? "+" : value < 0 ? "−" : ""
   return `${sign}${Math.abs(value).toFixed(fractionDigits)}%`
+}
+
+/** A plain whole-dollar string: "$119,354". No sign, no cents. */
+export function currency(value: number): string {
+  return `$${value.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
 }
