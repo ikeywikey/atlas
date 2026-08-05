@@ -144,6 +144,20 @@ export interface ManualItem {
 }
 
 /**
+ * Manual items split by side of the balance sheet, each side with its running
+ * total — what the Assets & liabilities screen renders as its two cards.
+ *
+ * Purely derived (see `summarizeManualItems`), never fetched: like
+ * `NetWorthComposition` and `CashFlow`, there's no upstream endpoint that
+ * returns this shape. The backend will still store flat `ManualItem` rows; the
+ * split is a presentation grouping, done once here rather than in the page.
+ */
+export interface ManualItemsSummary {
+  assets: { total: number; items: ManualItem[] }
+  liabilities: { total: number; items: ManualItem[] }
+}
+
+/**
  * One bucket of the net-worth breakdown — "Cash & deposits", "Loans", etc.
  * Purely derived (aggregated from accounts + manual items), never fetched.
  */

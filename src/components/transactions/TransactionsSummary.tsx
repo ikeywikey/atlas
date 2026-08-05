@@ -30,11 +30,18 @@ function TransactionsSummary({
         IN{" "}
         <span className="text-positive">+{wholeDollars.format(moneyIn)}</span>
       </span>
+      {/* Amber, deliberately departing from docs/design/transactions page.png,
+          where this figure is white — don't "fix" it back to match the image.
+          `warning` rather than `destructive` keeps red reserved for the states
+          that are genuinely wrong (an overdrawn account, a position below its
+          cost basis); money merely spent is neither.
+
+          Only this total is coloured. The per-row amounts in TransactionRow
+          stay neutral on purpose: a whole column of amber is the same wall-of-
+          colour problem that keeps the holdings table's dollars uncoloured. */}
       <span>
         OUT{" "}
-        <span className="text-foreground">
-          −{wholeDollars.format(moneyOut)}
-        </span>
+        <span className="text-warning">−{wholeDollars.format(moneyOut)}</span>
       </span>
     </div>
   )

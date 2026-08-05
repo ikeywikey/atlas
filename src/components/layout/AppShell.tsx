@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   Scale,
   TrendingUp,
+  Wallet,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -38,7 +39,11 @@ const NAV_ITEMS: {
   { label: "Investments", icon: TrendingUp, to: "/investments" },
   { label: "Spending", icon: CreditCard, to: "/spending" },
   { label: "Net worth", icon: Scale, to: "/net-worth" },
-  { label: "Accounts", icon: Layers, to: null },
+  // The layers glyph is the one lit on docs/design/Assets and liabilities.png —
+  // so this slot was never "Accounts". The same glyph reappears inside that
+  // screen as the asset rows' avatar, which is the corroboration.
+  { label: "Assets & liabilities", icon: Layers, to: "/assets" },
+  { label: "Connect accounts", icon: Wallet, to: null },
 ]
 
 // Shared sizing for every rail item, live or disabled, so the column stays on

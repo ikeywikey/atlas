@@ -36,16 +36,16 @@ function Investments() {
           <SummaryTile
             label="MARKET VALUE"
             value={currency(marketValue)}
-            // Only the percentage is coloured, not the dollar amount — the
-            // same split the table rows and the TOTAL GAIN tile use.
+            // The whole line is coloured, dollars included. The
+            // colour-the-percentage-only rule applies to the *holdings table*,
+            // where a column of coloured dollar figures becomes a wall of teal;
+            // a single summary line is one figure and reads better whole. Same
+            // call as the TOTAL GAIN tile beside it and the dashboard
+            // investments card.
             sub={
-              <>
-                {signedCurrency(dayChange)} (
-                <span className={changeTone(dayChange)}>
-                  {signedPercent(dayChangePct)}
-                </span>
-                ) today
-              </>
+              <span className={changeTone(dayChange)}>
+                {signedCurrency(dayChange)} ({signedPercent(dayChangePct)}) today
+              </span>
             }
           />
           <SummaryTile
