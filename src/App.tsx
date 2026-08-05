@@ -8,6 +8,8 @@ import Dashboard from "@/pages/Dashboard.tsx"
 import Transactions from "@/pages/Transactions.tsx"
 import NetWorth from "@/pages/NetWorth.tsx"
 import Investments from "@/pages/Investments.tsx"
+import Spending from "@/pages/Spending.tsx"
+import Assets from "@/pages/Assets.tsx"
 
 function App() {
   return (
@@ -28,8 +30,15 @@ function App() {
           <Route path="transactions" element={<Transactions />} />
           <Route path="net-worth" element={<NetWorth />} />
           <Route path="investments" element={<Investments />} />
+          <Route path="spending" element={<Spending />} />
+          <Route path="assets" element={<Assets />} />
           {/* "*" is the catch-all, matched only when nothing else does. Ranked
-              last by the router regardless of where it sits in this list. */}
+              last by the router regardless of where it sits in this list.
+
+              Every live entry in AppShell's NAV_ITEMS needs a line above: a rail
+              link with no matching Route doesn't 404, it silently falls through
+              to here and renders the Dashboard. That's exactly how /spending
+              shipped unreachable. */}
           <Route path="*" element={<Dashboard />} />
         </Route>
       </Routes>

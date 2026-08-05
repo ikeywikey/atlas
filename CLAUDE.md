@@ -27,15 +27,20 @@ src/
     investments/ investments feature components (SummaryTile, HoldingsTable, HoldingRow,
                  AllocationCard, AllocationRow, AllocationBar)
     spending/    spending feature components (CategoryCard, CategoryRow, CashFlowCard, MonthlyChart)
+    manualItems/ assets & liabilities feature components (ManualItemsBanner, ManualItemsCard,
+                 ManualItemRow)
     visuals/     decorative/visual components (Globe — the pixel globe brand mark)
     layout/      app chrome (AppShell + nav rail, PageHeader, SyncStatus)
   data/          the mock→real data seam: types.ts (API-shaped domain types), accounts.ts, netWorth.ts,
                  spending.ts, transactions.ts, manualItems.ts, investments.ts, index.ts (barrel)
-  pages/         Dashboard.tsx, Transactions.tsx, NetWorth.tsx, Investments.tsx, Spending.tsx
+  pages/         Dashboard.tsx, Transactions.tsx, NetWorth.tsx, Investments.tsx, Spending.tsx,
+                 Assets.tsx
   lib/           utils.ts (cn), palette.ts (shared chart-ramp colour + money/percent formatting)
 ```
 
 Rules: new **primitives** go in `ui/`; new **feature UI** goes in `components/<feature>/`, never in `ui/`. **All data access goes through `@/data`** (never inline mock arrays in components) — that's the single seam we swap to real API calls in Phase 2. Domain types are API-shaped (mirror Plaid) so the swap needs no UI changes.
+
+**Adding a screen touches two files, not one.** Every live entry in `AppShell`'s `NAV_ITEMS` needs a matching `<Route>` in `App.tsx`. A rail link with no route doesn't 404 — it falls through the `*` catch-all and silently renders the Dashboard, which is exactly how the spending screen shipped unreachable in PR #6. The rail's seven destinations and their glyphs are read off which icon is *active* in each `docs/design/` screenshot; `Connect accounts` is the one still carrying `to: null` (dimmed "coming soon") because its page isn't built.
 
 ## Commands
 

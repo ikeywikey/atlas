@@ -8,7 +8,7 @@ atlas links your real bank, credit card, and investment accounts into one dashbo
 
 ## Current state (as of 2026-08-03)
 
-The project is **frontend-first**: the dashboard UI and its design system are being built ahead of the backend, rather than in strict vertical slices. **Weeks 1–4 are complete** — every screen in `docs/design/` now exists on mock data. Week 5 (AI shell, states, responsive/PWA, deploy) is next.
+The project is **frontend-first**: the dashboard UI and its design system are being built ahead of the backend, rather than in strict vertical slices. **Weeks 1–4 are complete**, and six of the seven screens in `docs/design/` now exist on mock data — **Connect accounts** is the one still unbuilt (it needs a Plaid-shaped institution/`Item` concept the data layer doesn't have yet). Week 5 (AI shell, states, responsive/PWA, deploy) is next.
 
 **Built:**
 
@@ -21,11 +21,12 @@ The project is **frontend-first**: the dashboard UI and its design system are be
 - **Net worth screen** — the `NetWorthCard` at hero scale plus `Assets`/`Liabilities` composition cards, derived from the account list rather than hardcoded, so the breakdown always reconciles to the headline.
 - **Investments screen** — market value / total gain / cost basis tiles, a per-security holdings table, and an allocation donut. Holdings aggregate across accounts by `security_id`, and each account's holdings sum to that account's balance, so this screen reconciles to net worth too.
 - **Spending screen** — a by-category donut with a ranked bar list, a cash-flow card (income vs spending, net saved, savings rate), and a six-month bar chart. The categories are the only input: the total, the cash-flow figures, the current month's bar, and the dashboard card's rolled-up six rows are all derived from them.
+- **Assets & liabilities screen** — the manually-entered items Plaid can't see, split into assets and liabilities cards with their totals. Read-only: the "Add item" and per-row edit/delete controls are rendered but disabled, since CRUD needs real persistence (Week 10). Its totals are asserted equal to the net-worth screen's "Manual assets" and "Loans" buckets, so the two can't drift.
 - The typed **mock-data layer** — `src/data/{types,accounts,netWorth,spending,transactions,manualItems,investments}.ts` behind the `@/data` barrel. Types are API-shaped (Plaid-mirroring), so Phase 2 is a data-source swap rather than a UI rewrite.
 - A **Vitest** unit suite in `src/tests/` covering the data layer's pure logic.
 - The agentic Claude Code workflow described under **Development workflow** below, with four subagents live.
 
-**Not yet built on the frontend:** the AI search-bar shell, loading/empty/error states, and the responsive/PWA pass (all Week 5). The app is deliberately **desktop-first** until Week 5. Manual assets/liabilities are currently read-only — CRUD needs real persistence and lands in Phase 2.
+**Not yet built on the frontend:** the **Connect accounts** screen, the AI search-bar shell, loading/empty/error states, the `LAYOUT`/`CHART` control strip that appears in every design reference, and the responsive/PWA pass (Week 5). The app is deliberately **desktop-first** until Week 5. Manual assets/liabilities are currently read-only — CRUD needs real persistence and lands in Phase 2.
 
 **Not started — the entire backend:** Node.js + TypeScript API, Postgres, Plaid integration, the daily snapshot job, and the AI NL-query layer. The frontend currently runs against no live data. Everything from **Foundation** onward in this spec is the plan, not yet the reality.
 
